@@ -22,6 +22,12 @@
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
+      "@app/application": [
+        "libs/application/src"
+      ],
+      "@app/application/*": [
+        "libs/application/src/*"
+      ],
       "@app/domain": [
         "libs/domain/src"
       ],
