@@ -1,0 +1,3 @@
+export const EVM_TOKEN_TRANSFER_PROVIDER = Symbol(
+  'EVM_TOKEN_TRANSFER_PROVIDER',
+);
