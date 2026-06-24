@@ -177,7 +177,7 @@ function createGetTransfersUseCase(): jest.Mocked<
       if (position === '1') {
         throw new ApplicationError(
           'BLOCK_TOO_OLD',
-          'Block 1 is too old for the configured ethereum RPC. This endpoint accepts blocks from the last 100 blocks only.',
+          'Block 1 is too old for the configured ethereum RPC. Oldest accepted block is 100, latest block is 200.',
         );
       }
 

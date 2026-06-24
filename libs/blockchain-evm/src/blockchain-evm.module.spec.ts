@@ -74,4 +74,20 @@ describe('BlockchainEvmModule', () => {
       }).compile(),
     ).rejects.toThrow('Blockchain EVM RPC URL is required');
   });
+
+  it('requires max block age to be a non-negative integer', async () => {
+    await expect(
+      Test.createTestingModule({
+        imports: [
+          BlockchainEvmModule.forRoot({
+            chainSlug: 'ethereum',
+            rpcUrl: 'http://localhost:8545',
+            maxBlockAge: -1,
+          }),
+        ],
+      }).compile(),
+    ).rejects.toThrow(
+      'Blockchain EVM max block age must be a non-negative integer',
+    );
+  });
 });

@@ -1,5 +1,8 @@
 import type { Address } from 'viem';
-import type { TokenTransferProviderPort } from '@app/application';
+import {
+  ApplicationError,
+  type TokenTransferProviderPort,
+} from '@app/application';
 import type { Asset, Chain } from '@app/domain';
 import { Transfer } from '@app/domain';
 import { ERC20_TRANSFER_EVENT } from './erc20-transfer-event';
@@ -22,6 +25,7 @@ export interface EvmTransferLog {
 }
 
 export interface EvmTokenTransferLogClient {
+  getBlockNumber(): Promise<bigint>;
   getLogs(input: {
     address: Address;
     event: typeof ERC20_TRANSFER_EVENT;
@@ -34,6 +38,7 @@ export interface EvmTokenTransferLogClient {
 export interface EvmTokenTransferProviderOptions {
   chainSlug: string;
   client: EvmTokenTransferLogClient;
+  maxBlockAge?: number;
 }
 
 export class EvmTokenTransferProvider implements TokenTransferProviderPort {
@@ -61,6 +66,8 @@ export class EvmTokenTransferProvider implements TokenTransferProviderPort {
     }
 
     const blockNumber = BigInt(input.position);
+    await this.assertBlockAge(input.chain, blockNumber);
+
     const logs = await this.options.client.getLogs({
       address: input.asset.identifier.value as Address,
       event: ERC20_TRANSFER_EVENT,
@@ -88,6 +95,31 @@ export class EvmTokenTransferProvider implements TokenTransferProviderPort {
           to: requireString(log.args?.to, 'to'),
           amountRaw: requireBigInt(log.args?.value, 'value').toString(),
         }),
+    );
+  }
+
+  private async assertBlockAge(
+    chain: Chain,
+    blockNumber: bigint,
+  ): Promise<void> {
+    const maxBlockAge = this.options.maxBlockAge;
+
+    if (maxBlockAge === undefined) {
+      return;
+    }
+
+    const latestBlock = await this.options.client.getBlockNumber();
+    const maxBlockAgeBigInt = BigInt(maxBlockAge);
+    const oldestAcceptedBlock =
+      latestBlock > maxBlockAgeBigInt ? latestBlock - maxBlockAgeBigInt : 0n;
+
+    if (blockNumber >= oldestAcceptedBlock) {
+      return;
+    }
+
+    throw new ApplicationError(
+      'BLOCK_TOO_OLD',
+      `Block ${blockNumber.toString()} is too old for the configured ${chain.slug} RPC. Oldest accepted block is ${oldestAcceptedBlock.toString()}, latest block is ${latestBlock.toString()}.`,
     );
   }
 }

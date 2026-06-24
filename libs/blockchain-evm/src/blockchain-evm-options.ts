@@ -4,4 +4,5 @@ export interface BlockchainEvmModuleOptions {
   chainSlug: string;
   rpcUrl: string;
   viemChain?: ViemChain;
+  maxBlockAge?: number;
 }

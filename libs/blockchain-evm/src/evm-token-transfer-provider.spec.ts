@@ -1,3 +1,4 @@
+import { ApplicationError } from '@app/application';
 import { Asset, Chain } from '@app/domain';
 import { ERC20_TRANSFER_EVENT } from './erc20-transfer-event';
 import {
@@ -35,6 +36,45 @@ describe('EvmTokenTransferProvider', () => {
       toBlock: 123n,
       strict: true,
     });
+  });
+
+  it('rejects blocks outside configured RPC block age window', async () => {
+    const provider = createProvider(
+      {
+        getBlockNumber: jest.fn(() => Promise.resolve(200n)),
+        getLogs: jest.fn(() => Promise.resolve([])),
+      },
+      { maxBlockAge: 50 },
+    );
+
+    await expect(
+      provider.getTransfers({
+        chain: ethereum,
+        asset: usdc,
+        position: '149',
+      }),
+    ).rejects.toMatchObject<ApplicationError>({
+      code: 'BLOCK_TOO_OLD',
+    });
+  });
+
+  it('allows blocks inside configured RPC block age window', async () => {
+    const getLogs = jest.fn(() => Promise.resolve([]));
+    const provider = createProvider(
+      {
+        getBlockNumber: jest.fn(() => Promise.resolve(200n)),
+        getLogs,
+      },
+      { maxBlockAge: 50 },
+    );
+
+    await provider.getTransfers({
+      chain: ethereum,
+      asset: usdc,
+      position: '150',
+    });
+
+    expect(getLogs).toHaveBeenCalled();
   });
 
   it('maps Transfer logs into domain transfers', async () => {
@@ -107,15 +147,18 @@ const transactionHash =
 
 function createClient(): EvmTokenTransferLogClient {
   return {
+    getBlockNumber: jest.fn(() => Promise.resolve(123n)),
     getLogs: jest.fn(() => Promise.resolve([])),
   };
 }
 
 function createProvider(
   client: EvmTokenTransferLogClient = createClient(),
+  options: { maxBlockAge?: number } = {},
 ): EvmTokenTransferProvider {
   return new EvmTokenTransferProvider({
     chainSlug: 'ethereum',
     client,
+    maxBlockAge: options.maxBlockAge,
   });
 }

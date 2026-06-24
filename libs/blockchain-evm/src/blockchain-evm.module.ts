@@ -20,7 +20,9 @@ export class BlockchainEvmModule {
 
         return new EvmTokenTransferProvider({
           chainSlug: options.chainSlug,
+          maxBlockAge: options.maxBlockAge,
           client: {
+            getBlockNumber: () => publicClient.getBlockNumber(),
             getLogs: (input) => publicClient.getLogs(input),
           },
         });
@@ -42,5 +44,14 @@ function assertOptions(options: BlockchainEvmModuleOptions): void {
 
   if (options.rpcUrl.trim().length === 0) {
     throw new Error('Blockchain EVM RPC URL is required');
+  }
+
+  if (
+    options.maxBlockAge !== undefined &&
+    (!Number.isInteger(options.maxBlockAge) || options.maxBlockAge < 0)
+  ) {
+    throw new Error(
+      'Blockchain EVM max block age must be a non-negative integer',
+    );
   }
 }
