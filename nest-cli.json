@@ -11,6 +11,15 @@
   "root": "apps/usdc-block-transfers",
   "defaultLibraryPrefix": "@app",
   "projects": {
+    "domain": {
+      "type": "library",
+      "root": "libs/domain",
+      "entryFile": "index",
+      "sourceRoot": "libs/domain/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/domain/tsconfig.lib.json"
+      }
+    },
     "usdc-block-transfers": {
       "type": "application",
       "root": "apps/usdc-block-transfers",
