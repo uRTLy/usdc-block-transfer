@@ -5,6 +5,7 @@
   "testRegex": ".e2e-spec.ts$",
   "moduleNameMapper": {
     "^@app/application(|/.*)$": "<rootDir>/../../../libs/application/src/$1",
+    "^@app/blockchain-evm(|/.*)$": "<rootDir>/../../../libs/blockchain-evm/src/$1",
     "^@app/domain(|/.*)$": "<rootDir>/../../../libs/domain/src/$1"
   },
   "transform": {
