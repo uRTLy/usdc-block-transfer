@@ -7,14 +7,20 @@ import {
 
 describe('EvmTokenTransferProvider', () => {
   it('supports EVM contract assets addressed by block number', () => {
-    const provider = new EvmTokenTransferProvider(createClient());
+    const provider = createProvider();
 
     expect(provider.supports({ chain: ethereum, asset: usdc })).toBe(true);
   });
 
+  it('does not support EVM assets from other chains', () => {
+    const provider = createProvider();
+
+    expect(provider.supports({ chain: polygon, asset: usdc })).toBe(false);
+  });
+
   it('queries ERC20 Transfer logs for a single block', async () => {
     const getLogs = jest.fn(() => Promise.resolve([]));
-    const provider = new EvmTokenTransferProvider({ getLogs });
+    const provider = createProvider({ getLogs });
 
     await provider.getTransfers({
       chain: ethereum,
@@ -32,7 +38,7 @@ describe('EvmTokenTransferProvider', () => {
   });
 
   it('maps Transfer logs into domain transfers', async () => {
-    const provider = new EvmTokenTransferProvider({
+    const provider = createProvider({
       getLogs: jest.fn(() =>
         Promise.resolve([
           {
@@ -78,6 +84,13 @@ const ethereum = new Chain({
   positionKind: 'blockNumber',
 });
 
+const polygon = new Chain({
+  slug: 'polygon',
+  name: 'Polygon',
+  family: 'evm',
+  positionKind: 'blockNumber',
+});
+
 const usdc = new Asset({
   symbol: 'USDC',
   name: 'USD Coin',
@@ -96,4 +109,13 @@ function createClient(): EvmTokenTransferLogClient {
   return {
     getLogs: jest.fn(() => Promise.resolve([])),
   };
+}
+
+function createProvider(
+  client: EvmTokenTransferLogClient = createClient(),
+): EvmTokenTransferProvider {
+  return new EvmTokenTransferProvider({
+    chainSlug: 'ethereum',
+    client,
+  });
 }

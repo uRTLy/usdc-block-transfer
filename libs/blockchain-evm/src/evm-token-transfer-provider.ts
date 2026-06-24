@@ -31,11 +31,17 @@ export interface EvmTokenTransferLogClient {
   }): Promise<EvmTransferLog[]>;
 }
 
+export interface EvmTokenTransferProviderOptions {
+  chainSlug: string;
+  client: EvmTokenTransferLogClient;
+}
+
 export class EvmTokenTransferProvider implements TokenTransferProviderPort {
-  constructor(private readonly client: EvmTokenTransferLogClient) {}
+  constructor(private readonly options: EvmTokenTransferProviderOptions) {}
 
   supports(input: { chain: Chain; asset: Asset }): boolean {
     return (
+      input.chain.slug === this.options.chainSlug &&
       input.chain.family === 'evm' &&
       input.chain.positionKind === 'blockNumber' &&
       input.asset.identifier.type === 'contractAddress' &&
@@ -55,7 +61,7 @@ export class EvmTokenTransferProvider implements TokenTransferProviderPort {
     }
 
     const blockNumber = BigInt(input.position);
-    const logs = await this.client.getLogs({
+    const logs = await this.options.client.getLogs({
       address: input.asset.identifier.value as Address,
       event: ERC20_TRANSFER_EVENT,
       fromBlock: blockNumber,
