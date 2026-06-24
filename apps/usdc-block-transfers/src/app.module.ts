@@ -7,10 +7,11 @@ import {
   SUPPORTED_ASSETS,
   SUPPORTED_CHAINS,
 } from './config/supported-assets.config';
+import { TransfersController } from './transfers/transfers.controller';
 
 @Module({
   imports: [],
-  controllers: [AppController],
+  controllers: [AppController, TransfersController],
   providers: [
     AppService,
     {
