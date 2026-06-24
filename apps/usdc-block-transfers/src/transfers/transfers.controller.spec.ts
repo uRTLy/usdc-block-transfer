@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { ApplicationError } from '@app/application';
 import { TransfersController } from './transfers.controller';
 
 describe('TransfersController', () => {
@@ -20,12 +20,12 @@ describe('TransfersController', () => {
     ['blockNumber', 'ethereum', 'USDC', '-1'],
     ['blockNumber', 'ethereum', 'USDC', 'abc'],
   ])(
-    'throws bad request for invalid %s',
+    'throws application error for invalid %s',
     (_field, chain, asset, blockNumber) => {
       const controller = new TransfersController();
 
       expect(() => controller.getTransfers(chain, asset, blockNumber)).toThrow(
-        BadRequestException,
+        ApplicationError,
       );
     },
   );

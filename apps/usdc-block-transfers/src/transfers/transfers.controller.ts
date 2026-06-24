@@ -1,4 +1,5 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApplicationError } from '@app/application';
 
 interface GetTransfersResponse {
   chain: string;
@@ -30,7 +31,7 @@ export class TransfersController {
 
 function parseRequiredQueryString(name: string, value: unknown): string {
   if (typeof value !== 'string' || value.trim().length === 0) {
-    throw new BadRequestException(`${name} is required`);
+    throw new ApplicationError('INVALID_QUERY', `${name} is required`);
   }
 
   return value.trim();
@@ -40,7 +41,10 @@ function parseBlockNumber(value: unknown): string {
   const blockNumber = parseRequiredQueryString('blockNumber', value);
 
   if (!/^\d+$/.test(blockNumber)) {
-    throw new BadRequestException('blockNumber must be a non-negative integer');
+    throw new ApplicationError(
+      'INVALID_QUERY',
+      'blockNumber must be a non-negative integer',
+    );
   }
 
   return blockNumber;

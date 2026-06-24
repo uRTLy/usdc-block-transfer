@@ -65,7 +65,14 @@ describe('TransfersController (e2e)', () => {
         asset: 'USDC',
         blockNumber: '-1',
       })
-      .expect(400);
+      .expect(400)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          statusCode: 400,
+          error: 'INVALID_QUERY',
+          message: 'blockNumber must be a non-negative integer',
+        });
+      });
   });
 
   afterEach(async () => {
