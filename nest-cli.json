@@ -1,8 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/usdc-block-transfers/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/usdc-block-transfers/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/usdc-block-transfers",
+  "projects": {
+    "api": {
+      "type": "application",
+      "root": "apps/api",
+      "entryFile": "main",
+      "sourceRoot": "apps/api/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/api/tsconfig.app.json"
+      }
+    },
+    "usdc-block-transfers": {
+      "type": "application",
+      "root": "apps/usdc-block-transfers",
+      "entryFile": "main",
+      "sourceRoot": "apps/usdc-block-transfers/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/usdc-block-transfers/tsconfig.app.json"
+      }
+    }
   }
 }
