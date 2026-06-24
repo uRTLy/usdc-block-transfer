@@ -128,6 +128,28 @@ describe('TransfersController (e2e)', () => {
       });
   });
 
+  it('/v1/transfers returns 422 when block is too old for configured RPC', () => {
+    return request(app.getHttpServer())
+      .get('/v1/transfers')
+      .query({
+        chain: 'ethereum',
+        asset: 'USDC',
+        blockNumber: '1',
+      })
+      .expect(422)
+      .expect(({ body }) => {
+        const responseBody = body as { message: string };
+
+        expect(body).toMatchObject({
+          statusCode: 422,
+          error: 'BLOCK_TOO_OLD',
+        });
+        expect(responseBody.message).toContain(
+          'too old for the configured ethereum RPC',
+        );
+      });
+  });
+
   afterEach(async () => {
     await app.close();
   });
@@ -149,6 +171,13 @@ function createGetTransfersUseCase(): jest.Mocked<
         throw new ApplicationError(
           'UNSUPPORTED_ASSET',
           'Unsupported asset: DAI',
+        );
+      }
+
+      if (position === '1') {
+        throw new ApplicationError(
+          'BLOCK_TOO_OLD',
+          'Block 1 is too old for the configured ethereum RPC. This endpoint accepts blocks from the last 100 blocks only.',
         );
       }
 

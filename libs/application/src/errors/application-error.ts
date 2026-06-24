@@ -1,7 +1,8 @@
 export type ApplicationErrorCode =
   | 'INVALID_QUERY'
   | 'UNSUPPORTED_CHAIN'
-  | 'UNSUPPORTED_ASSET';
+  | 'UNSUPPORTED_ASSET'
+  | 'BLOCK_TOO_OLD';
 
 export class ApplicationError extends Error {
   constructor(

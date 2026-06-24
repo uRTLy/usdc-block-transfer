@@ -38,6 +38,8 @@ export function getApplicationErrorStatus(
   switch (code) {
     case 'INVALID_QUERY':
       return HttpStatus.BAD_REQUEST;
+    case 'BLOCK_TOO_OLD':
+      return HttpStatus.UNPROCESSABLE_ENTITY;
     case 'UNSUPPORTED_CHAIN':
     case 'UNSUPPORTED_ASSET':
       return HttpStatus.NOT_FOUND;
