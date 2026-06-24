@@ -1,4 +1,4 @@
-import { Asset, Chain, Transfer } from '@app/domain';
+import { Asset, Chain, Transfer } from '../../../domain/src';
 import { ApplicationError } from '../errors/application-error';
 import { AssetRegistryPort } from '../ports/asset-registry.port';
 import { TokenTransferProviderRegistryPort } from '../ports/token-transfer-provider-registry.port';
