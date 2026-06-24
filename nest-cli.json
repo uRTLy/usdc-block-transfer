@@ -9,16 +9,8 @@
   },
   "monorepo": true,
   "root": "apps/usdc-block-transfers",
+  "defaultLibraryPrefix": "@app",
   "projects": {
-    "api": {
-      "type": "application",
-      "root": "apps/api",
-      "entryFile": "main",
-      "sourceRoot": "apps/api/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/api/tsconfig.app.json"
-      }
-    },
     "usdc-block-transfers": {
       "type": "application",
       "root": "apps/usdc-block-transfers",
