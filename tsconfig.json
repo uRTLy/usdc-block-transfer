@@ -28,6 +28,12 @@
       "@app/application/*": [
         "libs/application/src/*"
       ],
+      "@app/blockchain-evm": [
+        "libs/blockchain-evm/src"
+      ],
+      "@app/blockchain-evm/*": [
+        "libs/blockchain-evm/src/*"
+      ],
       "@app/domain": [
         "libs/domain/src"
       ],

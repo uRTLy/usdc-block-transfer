@@ -20,6 +20,15 @@
         "tsConfigPath": "libs/application/tsconfig.lib.json"
       }
     },
+    "blockchain-evm": {
+      "type": "library",
+      "root": "libs/blockchain-evm",
+      "entryFile": "index",
+      "sourceRoot": "libs/blockchain-evm/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/blockchain-evm/tsconfig.lib.json"
+      }
+    },
     "domain": {
       "type": "library",
       "root": "libs/domain",
