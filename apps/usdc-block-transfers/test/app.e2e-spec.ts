@@ -75,6 +75,42 @@ describe('TransfersController (e2e)', () => {
       });
   });
 
+  it('/v1/transfers returns 404 for unsupported chain', () => {
+    return request(app.getHttpServer())
+      .get('/v1/transfers')
+      .query({
+        chain: 'polygon',
+        asset: 'USDC',
+        blockNumber: '123',
+      })
+      .expect(404)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          statusCode: 404,
+          error: 'UNSUPPORTED_CHAIN',
+          message: 'Unsupported chain: polygon',
+        });
+      });
+  });
+
+  it('/v1/transfers returns 404 for unsupported asset', () => {
+    return request(app.getHttpServer())
+      .get('/v1/transfers')
+      .query({
+        chain: 'ethereum',
+        asset: 'DAI',
+        blockNumber: '123',
+      })
+      .expect(404)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          statusCode: 404,
+          error: 'UNSUPPORTED_ASSET',
+          message: 'Unsupported asset: DAI',
+        });
+      });
+  });
+
   afterEach(async () => {
     await app.close();
   });
