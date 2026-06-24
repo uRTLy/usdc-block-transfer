@@ -1,9 +1,11 @@
-import { ApplicationError, AssetRegistryPort } from '@app/application';
+import { ApplicationError, GetTransfersUseCase } from '@app/application';
+import { Transfer } from '@app/domain';
 import { TransfersController } from './transfers.controller';
 
 describe('TransfersController', () => {
-  it('returns an empty transfer list for a valid request', async () => {
-    const controller = new TransfersController(createAssetRegistry());
+  it('calls use case with normalized query params', async () => {
+    const useCase = createGetTransfersUseCase([]);
+    const controller = new TransfersController(useCase);
 
     await expect(
       controller.getTransfers(' Ethereum ', ' usdc ', '123'),
@@ -12,6 +14,48 @@ describe('TransfersController', () => {
       asset: 'USDC',
       blockNumber: '123',
       transfers: [],
+    });
+
+    expect(useCase.execute).toHaveBeenCalledWith({
+      chainSlug: 'ethereum',
+      assetSymbol: 'USDC',
+      position: '123',
+    });
+  });
+
+  it('maps transfers to response shape', async () => {
+    const controller = new TransfersController(
+      createGetTransfersUseCase([
+        new Transfer({
+          chainSlug: 'ethereum',
+          assetSymbol: 'USDC',
+          position: '123',
+          transactionHash: '0xabc',
+          transactionIndex: 1,
+          logIndex: 2,
+          from: '0xfrom',
+          to: '0xto',
+          amountRaw: '1000000',
+        }),
+      ]),
+    );
+
+    await expect(
+      controller.getTransfers('ethereum', 'USDC', '123'),
+    ).resolves.toEqual({
+      chain: 'ethereum',
+      asset: 'USDC',
+      blockNumber: '123',
+      transfers: [
+        {
+          transactionHash: '0xabc',
+          transactionIndex: 1,
+          logIndex: 2,
+          from: '0xfrom',
+          to: '0xto',
+          amountRaw: '1000000',
+        },
+      ],
     });
   });
 
@@ -24,7 +68,7 @@ describe('TransfersController', () => {
   ])(
     'throws application error for invalid %s',
     async (_field, chain, asset, blockNumber) => {
-      const controller = new TransfersController(createAssetRegistry());
+      const controller = new TransfersController(createGetTransfersUseCase([]));
 
       await expect(
         controller.getTransfers(chain, asset, blockNumber),
@@ -32,8 +76,12 @@ describe('TransfersController', () => {
     },
   );
 
-  it('throws application error for unsupported chain', async () => {
-    const controller = new TransfersController(createAssetRegistry());
+  it('passes application errors from use case', async () => {
+    const useCase = createGetTransfersUseCase([]);
+    useCase.execute.mockRejectedValue(
+      new ApplicationError('UNSUPPORTED_CHAIN', 'Unsupported chain: polygon'),
+    );
+    const controller = new TransfersController(useCase);
 
     await expect(
       controller.getTransfers('polygon', 'USDC', '123'),
@@ -41,49 +89,12 @@ describe('TransfersController', () => {
       code: 'UNSUPPORTED_CHAIN',
     });
   });
-
-  it('throws application error for unsupported asset', async () => {
-    const controller = new TransfersController(createAssetRegistry());
-
-    await expect(
-      controller.getTransfers('ethereum', 'DAI', '123'),
-    ).rejects.toMatchObject({
-      code: 'UNSUPPORTED_ASSET',
-    });
-  });
 });
 
-function createAssetRegistry(): AssetRegistryPort {
+function createGetTransfersUseCase(
+  transfers: Transfer[],
+): jest.Mocked<Pick<GetTransfersUseCase, 'execute'>> {
   return {
-    listChains: jest.fn(),
-    listAssets: jest.fn(),
-    findChain: jest.fn((chainSlug: string) => {
-      if (chainSlug !== 'ethereum') {
-        return Promise.resolve(null);
-      }
-
-      return Promise.resolve({
-        slug: 'ethereum',
-        name: 'Ethereum Mainnet',
-        family: 'evm',
-        positionKind: 'blockNumber',
-      });
-    }),
-    findAsset: jest.fn((chainSlug: string, assetSymbol: string) => {
-      if (chainSlug !== 'ethereum' || assetSymbol !== 'USDC') {
-        return Promise.resolve(null);
-      }
-
-      return Promise.resolve({
-        symbol: 'USDC',
-        name: 'USD Coin',
-        chainSlug: 'ethereum',
-        decimals: 6,
-        identifier: {
-          type: 'contractAddress',
-          value: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-        },
-      });
-    }),
+    execute: jest.fn().mockResolvedValue(transfers),
   };
 }

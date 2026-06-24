@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { ApplicationError, GetTransfersUseCase } from '@app/application';
+import { Transfer } from '@app/domain';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -30,11 +32,17 @@ describe('AppController (e2e)', () => {
 
 describe('TransfersController (e2e)', () => {
   let app: INestApplication<App>;
+  let getTransfersUseCase: jest.Mocked<Pick<GetTransfersUseCase, 'execute'>>;
 
   beforeEach(async () => {
+    getTransfersUseCase = createGetTransfersUseCase();
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(GetTransfersUseCase)
+      .useValue(getTransfersUseCase)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -53,7 +61,16 @@ describe('TransfersController (e2e)', () => {
         chain: 'ethereum',
         asset: 'USDC',
         blockNumber: '123',
-        transfers: [],
+        transfers: [
+          {
+            transactionHash: '0xabc',
+            transactionIndex: 1,
+            logIndex: 2,
+            from: '0xfrom',
+            to: '0xto',
+            amountRaw: '1000000',
+          },
+        ],
       });
   });
 
@@ -115,3 +132,39 @@ describe('TransfersController (e2e)', () => {
     await app.close();
   });
 });
+
+function createGetTransfersUseCase(): jest.Mocked<
+  Pick<GetTransfersUseCase, 'execute'>
+> {
+  return {
+    execute: jest.fn(({ chainSlug, assetSymbol, position }) => {
+      if (chainSlug === 'polygon') {
+        throw new ApplicationError(
+          'UNSUPPORTED_CHAIN',
+          'Unsupported chain: polygon',
+        );
+      }
+
+      if (assetSymbol === 'DAI') {
+        throw new ApplicationError(
+          'UNSUPPORTED_ASSET',
+          'Unsupported asset: DAI',
+        );
+      }
+
+      return Promise.resolve([
+        new Transfer({
+          chainSlug,
+          assetSymbol,
+          position,
+          transactionHash: '0xabc',
+          transactionIndex: 1,
+          logIndex: 2,
+          from: '0xfrom',
+          to: '0xto',
+          amountRaw: '1000000',
+        }),
+      ]);
+    }),
+  };
+}

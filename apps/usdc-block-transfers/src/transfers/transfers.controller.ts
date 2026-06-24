@@ -1,19 +1,30 @@
 import { Controller, Get, Inject, Query } from '@nestjs/common';
-import { ApplicationError, ASSET_REGISTRY } from '@app/application';
-import type { AssetRegistryPort } from '@app/application';
+import { ApplicationError, GetTransfersUseCase } from '@app/application';
+import type { Transfer } from '@app/domain';
+
+type GetTransfersHandler = Pick<GetTransfersUseCase, 'execute'>;
+
+interface TransferResponse {
+  transactionHash: string;
+  transactionIndex: number;
+  logIndex: number;
+  from: string;
+  to: string;
+  amountRaw: string;
+}
 
 interface GetTransfersResponse {
   chain: string;
   asset: string;
   blockNumber: string;
-  transfers: [];
+  transfers: TransferResponse[];
 }
 
 @Controller('v1/transfers')
 export class TransfersController {
   constructor(
-    @Inject(ASSET_REGISTRY)
-    private readonly assetRegistry: AssetRegistryPort,
+    @Inject(GetTransfersUseCase)
+    private readonly getTransfersUseCase: GetTransfersHandler,
   ) {}
 
   @Get()
@@ -25,34 +36,30 @@ export class TransfersController {
     const chainSlug = parseRequiredQueryString('chain', chain).toLowerCase();
     const assetSymbol = parseRequiredQueryString('asset', asset).toUpperCase();
     const block = parseBlockNumber(blockNumber);
-    const supportedChain = await this.assetRegistry.findChain(chainSlug);
-
-    if (!supportedChain) {
-      throw new ApplicationError(
-        'UNSUPPORTED_CHAIN',
-        `Unsupported chain: ${chainSlug}`,
-      );
-    }
-
-    const supportedAsset = await this.assetRegistry.findAsset(
-      supportedChain.slug,
+    const transfers = await this.getTransfersUseCase.execute({
+      chainSlug,
       assetSymbol,
-    );
-
-    if (!supportedAsset) {
-      throw new ApplicationError(
-        'UNSUPPORTED_ASSET',
-        `Unsupported asset: ${assetSymbol}`,
-      );
-    }
+      position: block,
+    });
 
     return {
-      chain: supportedChain.slug,
-      asset: supportedAsset.symbol,
+      chain: chainSlug,
+      asset: assetSymbol,
       blockNumber: block,
-      transfers: [],
+      transfers: transfers.map(toTransferResponse),
     };
   }
+}
+
+function toTransferResponse(transfer: Transfer): TransferResponse {
+  return {
+    transactionHash: transfer.transactionHash,
+    transactionIndex: transfer.transactionIndex,
+    logIndex: transfer.logIndex,
+    from: transfer.from,
+    to: transfer.to,
+    amountRaw: transfer.amountRaw,
+  };
 }
 
 function parseRequiredQueryString(name: string, value: unknown): string {
