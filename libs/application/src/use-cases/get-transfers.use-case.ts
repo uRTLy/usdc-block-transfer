@@ -43,7 +43,8 @@ export class GetTransfersUseCase {
     });
 
     if (!provider) {
-      throw new Error(
+      throw new ApplicationError(
+        'NO_COMPATIBLE_TRANSFER_PROVIDER',
         `No token transfer provider configured for ${chain.slug}:${asset.symbol}`,
       );
     }

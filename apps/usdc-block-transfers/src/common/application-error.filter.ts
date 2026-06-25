@@ -43,6 +43,8 @@ export function getApplicationErrorStatus(
     case 'UNSUPPORTED_CHAIN':
     case 'UNSUPPORTED_ASSET':
       return HttpStatus.NOT_FOUND;
+    case 'NO_COMPATIBLE_TRANSFER_PROVIDER':
+      return HttpStatus.INTERNAL_SERVER_ERROR;
   }
 
   return assertNever(code);

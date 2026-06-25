@@ -79,6 +79,24 @@ describe('GetTransfersUseCase', () => {
     });
   });
 
+  it('throws an application error when no compatible provider exists', async () => {
+    const useCase = new GetTransfersUseCase(
+      createAssetRegistry({ chain, asset }),
+      createProviderRegistry(null),
+    );
+
+    await expect(
+      useCase.execute({
+        chainSlug: 'ethereum',
+        assetSymbol: 'USDC',
+        position: '123',
+      }),
+    ).rejects.toMatchObject<ApplicationError>({
+      code: 'NO_COMPATIBLE_TRANSFER_PROVIDER',
+      message: 'No token transfer provider configured for ethereum:USDC',
+    });
+  });
+
   it('returns transfers sorted by transaction index and log index', async () => {
     const secondTransfer = createTransfer({
       transactionIndex: 1,
