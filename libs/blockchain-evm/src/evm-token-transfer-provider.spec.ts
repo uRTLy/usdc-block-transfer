@@ -1,5 +1,6 @@
 import { ApplicationError } from '@app/application';
 import { Asset, Chain } from '@app/domain';
+import { TimeoutError } from 'viem';
 import { ERC20_TRANSFER_EVENT } from './erc20-transfer-event';
 import {
   EvmTokenTransferLogClient,
@@ -114,6 +115,30 @@ describe('EvmTokenTransferProvider', () => {
         amountRaw: '2500000',
       },
     ]);
+  });
+
+  it('maps RPC client errors into application errors', async () => {
+    const provider = createProvider({
+      getBlockNumber: jest.fn(() => Promise.resolve(123n)),
+      getLogs: jest.fn(() =>
+        Promise.reject(
+          new TimeoutError({
+            body: { method: 'eth_getLogs' },
+            url: 'https://example.com',
+          }),
+        ),
+      ),
+    });
+
+    await expect(
+      provider.getTransfers({
+        chain: ethereum,
+        asset: usdc,
+        position: '123',
+      }),
+    ).rejects.toMatchObject<ApplicationError>({
+      code: 'UPSTREAM_RPC_TIMEOUT',
+    });
   });
 });
 

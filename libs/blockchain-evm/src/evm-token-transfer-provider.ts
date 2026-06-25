@@ -6,6 +6,7 @@ import {
 import type { Asset, Chain } from '@app/domain';
 import { Transfer } from '@app/domain';
 import { ERC20_TRANSFER_EVENT } from './erc20-transfer-event';
+import { mapViemRpcError } from './utils/map-viem-rpc-error';
 import { isEvmAddress } from './utils/is-evm-address';
 import {
   requireBigInt,
@@ -66,36 +67,45 @@ export class EvmTokenTransferProvider implements TokenTransferProviderPort {
     }
 
     const blockNumber = BigInt(input.position);
-    await this.assertBlockAge(input.chain, blockNumber);
 
-    const logs = await this.options.client.getLogs({
-      address: input.asset.identifier.value as Address,
-      event: ERC20_TRANSFER_EVENT,
-      fromBlock: blockNumber,
-      toBlock: blockNumber,
-      strict: true,
-    });
+    try {
+      await this.assertBlockAge(input.chain, blockNumber);
 
-    return logs.map(
-      (log) =>
-        new Transfer({
-          chainSlug: input.chain.slug,
-          assetSymbol: input.asset.symbol,
-          position: input.position,
-          transactionHash: requireString(
-            log.transactionHash,
-            'transactionHash',
-          ),
-          transactionIndex: requireNumber(
-            log.transactionIndex,
-            'transactionIndex',
-          ),
-          logIndex: requireNumber(log.logIndex, 'logIndex'),
-          from: requireString(log.args?.from, 'from'),
-          to: requireString(log.args?.to, 'to'),
-          amountRaw: requireBigInt(log.args?.value, 'value').toString(),
-        }),
-    );
+      const logs = await this.options.client.getLogs({
+        address: input.asset.identifier.value as Address,
+        event: ERC20_TRANSFER_EVENT,
+        fromBlock: blockNumber,
+        toBlock: blockNumber,
+        strict: true,
+      });
+
+      return logs.map(
+        (log) =>
+          new Transfer({
+            chainSlug: input.chain.slug,
+            assetSymbol: input.asset.symbol,
+            position: input.position,
+            transactionHash: requireString(
+              log.transactionHash,
+              'transactionHash',
+            ),
+            transactionIndex: requireNumber(
+              log.transactionIndex,
+              'transactionIndex',
+            ),
+            logIndex: requireNumber(log.logIndex, 'logIndex'),
+            from: requireString(log.args?.from, 'from'),
+            to: requireString(log.args?.to, 'to'),
+            amountRaw: requireBigInt(log.args?.value, 'value').toString(),
+          }),
+      );
+    } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+
+      throw mapViemRpcError(error);
+    }
   }
 
   private async assertBlockAge(

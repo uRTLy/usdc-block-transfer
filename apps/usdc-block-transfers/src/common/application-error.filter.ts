@@ -40,6 +40,13 @@ export function getApplicationErrorStatus(
       return HttpStatus.BAD_REQUEST;
     case 'BLOCK_TOO_OLD':
       return HttpStatus.UNPROCESSABLE_ENTITY;
+    case 'UPSTREAM_RPC_TIMEOUT':
+      return HttpStatus.GATEWAY_TIMEOUT;
+    case 'UPSTREAM_RPC_RATE_LIMITED':
+    case 'UPSTREAM_RPC_UNAVAILABLE':
+      return HttpStatus.SERVICE_UNAVAILABLE;
+    case 'UPSTREAM_RPC_BAD_RESPONSE':
+      return HttpStatus.BAD_GATEWAY;
     case 'UNSUPPORTED_CHAIN':
     case 'UNSUPPORTED_ASSET':
       return HttpStatus.NOT_FOUND;
