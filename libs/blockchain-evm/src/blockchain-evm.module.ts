@@ -20,8 +20,10 @@ export class BlockchainEvmModule {
 
         return new EvmTokenTransferProvider({
           chainSlug: options.chainSlug,
+          expectedChainId: options.expectedChainId ?? options.viemChain?.id,
           maxBlockAge: options.maxBlockAge,
           client: {
+            getChainId: () => publicClient.getChainId(),
             getBlockNumber: () => publicClient.getBlockNumber(),
             getLogs: (input) => publicClient.getLogs(input),
           },
@@ -52,6 +54,15 @@ function assertOptions(options: BlockchainEvmModuleOptions): void {
   ) {
     throw new Error(
       'Blockchain EVM max block age must be a non-negative integer',
+    );
+  }
+
+  if (
+    options.expectedChainId !== undefined &&
+    (!Number.isInteger(options.expectedChainId) || options.expectedChainId < 0)
+  ) {
+    throw new Error(
+      'Blockchain EVM expected chain id must be a non-negative integer',
     );
   }
 }

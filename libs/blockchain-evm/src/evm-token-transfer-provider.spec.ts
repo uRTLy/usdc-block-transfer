@@ -39,6 +39,49 @@ describe('EvmTokenTransferProvider', () => {
     });
   });
 
+  it('rejects blocks above the latest RPC block', async () => {
+    const getLogs = jest.fn(() => Promise.resolve([]));
+    const provider = createProvider({
+      getBlockNumber: jest.fn(() => Promise.resolve(200n)),
+      getLogs,
+    });
+
+    await expect(
+      provider.getTransfers({
+        chain: ethereum,
+        asset: usdc,
+        position: '201',
+      }),
+    ).rejects.toMatchObject<ApplicationError>({
+      code: 'BLOCK_NOT_AVAILABLE',
+    });
+
+    expect(getLogs).not.toHaveBeenCalled();
+  });
+
+  it('rejects RPC endpoints with an unexpected chain id', async () => {
+    const getLogs = jest.fn(() => Promise.resolve([]));
+    const provider = createProvider(
+      {
+        getChainId: jest.fn(() => Promise.resolve(137)),
+        getLogs,
+      },
+      { expectedChainId: 1 },
+    );
+
+    await expect(
+      provider.getTransfers({
+        chain: ethereum,
+        asset: usdc,
+        position: '123',
+      }),
+    ).rejects.toMatchObject<ApplicationError>({
+      code: 'UPSTREAM_RPC_BAD_RESPONSE',
+    });
+
+    expect(getLogs).not.toHaveBeenCalled();
+  });
+
   it('rejects blocks outside configured RPC block age window', async () => {
     const provider = createProvider(
       {
@@ -172,18 +215,23 @@ const transactionHash =
 
 function createClient(): EvmTokenTransferLogClient {
   return {
+    getChainId: jest.fn(() => Promise.resolve(1)),
     getBlockNumber: jest.fn(() => Promise.resolve(123n)),
     getLogs: jest.fn(() => Promise.resolve([])),
   };
 }
 
 function createProvider(
-  client: EvmTokenTransferLogClient = createClient(),
-  options: { maxBlockAge?: number } = {},
+  client: Partial<EvmTokenTransferLogClient> = {},
+  options: { expectedChainId?: number; maxBlockAge?: number } = {},
 ): EvmTokenTransferProvider {
   return new EvmTokenTransferProvider({
     chainSlug: 'ethereum',
-    client,
+    client: {
+      ...createClient(),
+      ...client,
+    },
+    expectedChainId: options.expectedChainId,
     maxBlockAge: options.maxBlockAge,
   });
 }

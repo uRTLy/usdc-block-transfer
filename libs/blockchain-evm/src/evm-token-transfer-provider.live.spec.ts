@@ -22,7 +22,10 @@ describeLive('EvmTokenTransferProvider live RPC smoke test', () => {
     });
     const provider = new EvmTokenTransferProvider({
       chainSlug: 'ethereum',
+      expectedChainId: mainnet.id,
       client: {
+        getChainId: () => client.getChainId(),
+        getBlockNumber: () => client.getBlockNumber(),
         getLogs: (input) => client.getLogs(input),
       },
     });

@@ -150,6 +150,24 @@ describe('TransfersController (e2e)', () => {
       });
   });
 
+  it('/v1/transfers returns 422 when block is not available yet', () => {
+    return request(app.getHttpServer())
+      .get('/v1/transfers')
+      .query({
+        chain: 'ethereum',
+        asset: 'USDC',
+        blockNumber: '999999999',
+      })
+      .expect(422)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          statusCode: 422,
+          error: 'BLOCK_NOT_AVAILABLE',
+          message: 'Block 999999999 is not available on ethereum yet.',
+        });
+      });
+  });
+
   afterEach(async () => {
     await app.close();
   });
@@ -178,6 +196,13 @@ function createGetTransfersUseCase(): jest.Mocked<
         throw new ApplicationError(
           'BLOCK_TOO_OLD',
           'Block 1 is too old for the configured ethereum RPC. Oldest accepted block is 100, latest block is 200.',
+        );
+      }
+
+      if (position === '999999999') {
+        throw new ApplicationError(
+          'BLOCK_NOT_AVAILABLE',
+          'Block 999999999 is not available on ethereum yet.',
         );
       }
 

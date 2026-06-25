@@ -38,6 +38,7 @@ export function getApplicationErrorStatus(
   switch (code) {
     case 'INVALID_QUERY':
       return HttpStatus.BAD_REQUEST;
+    case 'BLOCK_NOT_AVAILABLE':
     case 'BLOCK_TOO_OLD':
       return HttpStatus.UNPROCESSABLE_ENTITY;
     case 'UPSTREAM_RPC_TIMEOUT':

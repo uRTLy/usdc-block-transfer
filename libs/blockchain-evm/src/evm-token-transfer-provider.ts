@@ -26,6 +26,7 @@ export interface EvmTransferLog {
 }
 
 export interface EvmTokenTransferLogClient {
+  getChainId(): Promise<number>;
   getBlockNumber(): Promise<bigint>;
   getLogs(input: {
     address: Address;
@@ -38,11 +39,14 @@ export interface EvmTokenTransferLogClient {
 
 export interface EvmTokenTransferProviderOptions {
   chainSlug: string;
+  expectedChainId?: number;
   client: EvmTokenTransferLogClient;
   maxBlockAge?: number;
 }
 
 export class EvmTokenTransferProvider implements TokenTransferProviderPort {
+  private chainIdCheck?: Promise<void>;
+
   constructor(private readonly options: EvmTokenTransferProviderOptions) {}
 
   supports(input: { chain: Chain; asset: Asset }): boolean {
@@ -69,7 +73,8 @@ export class EvmTokenTransferProvider implements TokenTransferProviderPort {
     const blockNumber = BigInt(input.position);
 
     try {
-      await this.assertBlockAge(input.chain, blockNumber);
+      await this.assertChainId(input.chain);
+      await this.assertBlockAvailability(input.chain, blockNumber);
 
       const logs = await this.options.client.getLogs({
         address: input.asset.identifier.value as Address,
@@ -108,17 +113,52 @@ export class EvmTokenTransferProvider implements TokenTransferProviderPort {
     }
   }
 
-  private async assertBlockAge(
+  private assertChainId(chain: Chain): Promise<void> {
+    const expectedChainId = this.options.expectedChainId;
+
+    if (expectedChainId === undefined) {
+      return Promise.resolve();
+    }
+
+    this.chainIdCheck ??= this.options.client.getChainId().then(
+      (actualChainId) => {
+        if (actualChainId === expectedChainId) {
+          return;
+        }
+
+        throw new ApplicationError(
+          'UPSTREAM_RPC_BAD_RESPONSE',
+          `Configured ${chain.slug} RPC returned chain id ${actualChainId.toString()}, expected ${expectedChainId.toString()}. Check ETHEREUM_RPC_URL.`,
+        );
+      },
+      (error: unknown) => {
+        this.chainIdCheck = undefined;
+        throw error;
+      },
+    );
+
+    return this.chainIdCheck;
+  }
+
+  private async assertBlockAvailability(
     chain: Chain,
     blockNumber: bigint,
   ): Promise<void> {
+    const latestBlock = await this.options.client.getBlockNumber();
+
+    if (blockNumber > latestBlock) {
+      throw new ApplicationError(
+        'BLOCK_NOT_AVAILABLE',
+        `Block ${blockNumber.toString()} is not available on ${chain.slug} yet. Latest block is ${latestBlock.toString()}.`,
+      );
+    }
+
     const maxBlockAge = this.options.maxBlockAge;
 
     if (maxBlockAge === undefined) {
       return;
     }
 
-    const latestBlock = await this.options.client.getBlockNumber();
     const maxBlockAgeBigInt = BigInt(maxBlockAge);
     const oldestAcceptedBlock =
       latestBlock > maxBlockAgeBigInt ? latestBlock - maxBlockAgeBigInt : 0n;

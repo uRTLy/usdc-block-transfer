@@ -90,4 +90,20 @@ describe('BlockchainEvmModule', () => {
       'Blockchain EVM max block age must be a non-negative integer',
     );
   });
+
+  it('requires expected chain id to be a non-negative integer', async () => {
+    await expect(
+      Test.createTestingModule({
+        imports: [
+          BlockchainEvmModule.forRoot({
+            chainSlug: 'ethereum',
+            rpcUrl: 'http://localhost:8545',
+            expectedChainId: -1,
+          }),
+        ],
+      }).compile(),
+    ).rejects.toThrow(
+      'Blockchain EVM expected chain id must be a non-negative integer',
+    );
+  });
 });
