@@ -9,14 +9,6 @@ export interface StaticAssetRegistryOptions {
 export class StaticAssetRegistry implements AssetRegistryPort {
   constructor(private readonly options: StaticAssetRegistryOptions) {}
 
-  listChains(): Promise<Chain[]> {
-    return Promise.resolve([...this.options.chains]);
-  }
-
-  listAssets(): Promise<Asset[]> {
-    return Promise.resolve([...this.options.assets]);
-  }
-
   findChain(chainSlug: string): Promise<Chain | null> {
     const slug = chainSlug.trim().toLowerCase();
 

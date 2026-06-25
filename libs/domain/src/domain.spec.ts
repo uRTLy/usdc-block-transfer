@@ -14,7 +14,7 @@ describe('domain', () => {
     expect(chain.slug).toBe('ethereum');
   });
 
-  it('creates a chain-specific asset id', () => {
+  it('creates a chain-specific asset', () => {
     const asset = new Asset({
       symbol: 'USDC',
       name: 'USD Coin',
@@ -26,7 +26,10 @@ describe('domain', () => {
       },
     });
 
-    expect(asset.id).toBe('ethereum:USDC');
+    expect(asset).toMatchObject({
+      symbol: 'USDC',
+      chainSlug: 'ethereum',
+    });
   });
 
   it('sorts transfers by transaction index and log index', () => {

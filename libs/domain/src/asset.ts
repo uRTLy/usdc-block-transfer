@@ -47,12 +47,4 @@ export class Asset {
     this.decimals = props.decimals;
     this.identifier = props.identifier;
   }
-
-  get id(): string {
-    return `${this.chainSlug}:${this.symbol}`;
-  }
-
-  isOnChain(chainSlug: string): boolean {
-    return this.chainSlug === chainSlug;
-  }
 }

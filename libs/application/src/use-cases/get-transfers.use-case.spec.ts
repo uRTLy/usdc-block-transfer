@@ -137,8 +137,6 @@ function createAssetRegistry(input: {
   asset: Asset | null;
 }): AssetRegistryPort {
   return {
-    listChains: jest.fn(),
-    listAssets: jest.fn(),
     findChain: jest.fn().mockResolvedValue(input.chain),
     findAsset: jest.fn().mockResolvedValue(input.asset),
   };
