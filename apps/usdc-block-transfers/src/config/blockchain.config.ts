@@ -1,7 +1,6 @@
 export const ETHEREUM_CHAIN_SLUG = 'ethereum';
 
 const PUBLIC_ETHEREUM_RPC_URL = 'https://ethereum-rpc.publicnode.com';
-const DEFAULT_ETHEREUM_MAX_BLOCK_AGE = 100;
 
 export function getEthereumRpcUrl(): string {
   const rpcUrl = process.env.ETHEREUM_RPC_URL;
@@ -21,7 +20,7 @@ export function getEthereumMaxBlockAge(): number | undefined {
   const maxBlockAge = process.env.ETHEREUM_MAX_BLOCK_AGE;
 
   if (maxBlockAge === undefined) {
-    return DEFAULT_ETHEREUM_MAX_BLOCK_AGE;
+    return undefined;
   }
 
   if (maxBlockAge.trim().length === 0) {
