@@ -15,8 +15,6 @@ import {
   EVM_TOKEN_TRANSFER_PROVIDER,
 } from '@app/blockchain-evm';
 import { mainnet } from 'viem/chains';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { StaticAssetRegistry } from './asset-registry/static-asset-registry';
 import { ApplicationErrorFilter } from './common/application-error.filter';
 import {
@@ -40,9 +38,8 @@ import { TransfersController } from './transfers/transfers.controller';
       maxBlockAge: getEthereumMaxBlockAge(),
     }),
   ],
-  controllers: [AppController, TransfersController],
+  controllers: [TransfersController],
   providers: [
-    AppService,
     {
       provide: ASSET_REGISTRY,
       useFactory: () =>
