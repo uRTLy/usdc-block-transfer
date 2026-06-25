@@ -2,7 +2,7 @@
 
 NestJS API for reading ERC-20 `Transfer` events for supported assets in a single Ethereum block.
 
-The first supported asset is USDC on Ethereum mainnet. Amounts are returned as raw token units, so USDC values use `decimals: 6`.
+Transfer amounts are returned as raw strings. The response includes token decimals for display conversion.
 
 ## Requirements
 
@@ -80,6 +80,7 @@ Response shape:
 {
   "chain": "ethereum",
   "asset": "USDC",
+  "assetDecimals": 6,
   "blockNumber": "25394458",
   "transfers": [
     {

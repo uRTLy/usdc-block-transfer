@@ -16,6 +16,7 @@ interface TransferResponse {
 interface GetTransfersResponse {
   chain: string;
   asset: string;
+  assetDecimals: number;
   blockNumber: string;
   transfers: TransferResponse[];
 }
@@ -36,17 +37,18 @@ export class TransfersController {
     const chainSlug = parseRequiredQueryString('chain', chain).toLowerCase();
     const assetSymbol = parseRequiredQueryString('asset', asset).toUpperCase();
     const block = parseBlockNumber(blockNumber);
-    const transfers = await this.getTransfersUseCase.execute({
+    const result = await this.getTransfersUseCase.execute({
       chainSlug,
       assetSymbol,
       position: block,
     });
 
     return {
-      chain: chainSlug,
-      asset: assetSymbol,
-      blockNumber: block,
-      transfers: transfers.map(toTransferResponse),
+      chain: result.chain.slug,
+      asset: result.asset.symbol,
+      assetDecimals: result.asset.decimals,
+      blockNumber: result.position,
+      transfers: result.transfers.map(toTransferResponse),
     };
   }
 }

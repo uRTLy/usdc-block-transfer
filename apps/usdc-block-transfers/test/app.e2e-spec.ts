@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationError, GetTransfersUseCase } from '@app/application';
-import { Transfer } from '@app/domain';
+import { Asset, Chain, Transfer } from '@app/domain';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -36,6 +36,7 @@ describe('TransfersController (e2e)', () => {
       .expect({
         chain: 'ethereum',
         asset: 'USDC',
+        assetDecimals: 6,
         blockNumber: '123',
         transfers: [
           {
@@ -182,19 +183,42 @@ function createGetTransfersUseCase(): jest.Mocked<
         );
       }
 
-      return Promise.resolve([
-        new Transfer({
-          chainSlug,
-          assetSymbol,
-          position,
-          transactionHash: '0xabc',
-          transactionIndex: 1,
-          logIndex: 2,
-          from: '0xfrom',
-          to: '0xto',
-          amountRaw: '1000000',
-        }),
-      ]);
+      return Promise.resolve({
+        chain: ethereum,
+        asset: usdc,
+        position,
+        transfers: [
+          new Transfer({
+            chainSlug,
+            assetSymbol,
+            position,
+            transactionHash: '0xabc',
+            transactionIndex: 1,
+            logIndex: 2,
+            from: '0xfrom',
+            to: '0xto',
+            amountRaw: '1000000',
+          }),
+        ],
+      });
     }),
   };
 }
+
+const ethereum = new Chain({
+  slug: 'ethereum',
+  name: 'Ethereum Mainnet',
+  family: 'evm',
+  positionKind: 'blockNumber',
+});
+
+const usdc = new Asset({
+  symbol: 'USDC',
+  name: 'USD Coin',
+  chainSlug: 'ethereum',
+  decimals: 6,
+  identifier: {
+    type: 'contractAddress',
+    value: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  },
+});

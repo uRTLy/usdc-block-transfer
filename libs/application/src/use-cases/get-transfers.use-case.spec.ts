@@ -128,7 +128,12 @@ describe('GetTransfersUseCase', () => {
         assetSymbol: 'USDC',
         position: '123',
       }),
-    ).resolves.toEqual([firstTransfer, secondTransfer, thirdTransfer]);
+    ).resolves.toEqual({
+      chain,
+      asset,
+      position: '123',
+      transfers: [firstTransfer, secondTransfer, thirdTransfer],
+    });
   });
 });
 

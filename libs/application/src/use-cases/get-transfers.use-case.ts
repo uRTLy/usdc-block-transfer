@@ -1,4 +1,4 @@
-import { Transfer } from '@app/domain';
+import { Asset, Chain, Transfer } from '@app/domain';
 import { ApplicationError } from '../errors/application-error';
 import { AssetRegistryPort } from '../ports/asset-registry.port';
 import { TokenTransferProviderRegistryPort } from '../ports/token-transfer-provider-registry.port';
@@ -9,13 +9,20 @@ export interface GetTransfersInput {
   position: string;
 }
 
+export interface GetTransfersResult {
+  chain: Chain;
+  asset: Asset;
+  position: string;
+  transfers: Transfer[];
+}
+
 export class GetTransfersUseCase {
   constructor(
     private readonly assetRegistry: AssetRegistryPort,
     private readonly transferProviderRegistry: TokenTransferProviderRegistryPort,
   ) {}
 
-  async execute(input: GetTransfersInput): Promise<Transfer[]> {
+  async execute(input: GetTransfersInput): Promise<GetTransfersResult> {
     const chain = await this.assetRegistry.findChain(input.chainSlug);
 
     if (!chain) {
@@ -55,6 +62,11 @@ export class GetTransfersUseCase {
       position: input.position,
     });
 
-    return transfers.toSorted(Transfer.compareByChainOrder);
+    return {
+      chain,
+      asset,
+      position: input.position,
+      transfers: transfers.toSorted(Transfer.compareByChainOrder),
+    };
   }
 }

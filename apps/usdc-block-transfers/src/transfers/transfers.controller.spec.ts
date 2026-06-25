@@ -1,5 +1,5 @@
 import { ApplicationError, GetTransfersUseCase } from '@app/application';
-import { Transfer } from '@app/domain';
+import { Asset, Chain, Transfer } from '@app/domain';
 import { TransfersController } from './transfers.controller';
 
 describe('TransfersController', () => {
@@ -12,6 +12,7 @@ describe('TransfersController', () => {
     ).resolves.toEqual({
       chain: 'ethereum',
       asset: 'USDC',
+      assetDecimals: 6,
       blockNumber: '123',
       transfers: [],
     });
@@ -45,6 +46,7 @@ describe('TransfersController', () => {
     ).resolves.toEqual({
       chain: 'ethereum',
       asset: 'USDC',
+      assetDecimals: 6,
       blockNumber: '123',
       transfers: [
         {
@@ -95,6 +97,29 @@ function createGetTransfersUseCase(
   transfers: Transfer[],
 ): jest.Mocked<Pick<GetTransfersUseCase, 'execute'>> {
   return {
-    execute: jest.fn().mockResolvedValue(transfers),
+    execute: jest.fn().mockResolvedValue({
+      chain: ethereum,
+      asset: usdc,
+      position: '123',
+      transfers,
+    }),
   };
 }
+
+const ethereum = new Chain({
+  slug: 'ethereum',
+  name: 'Ethereum Mainnet',
+  family: 'evm',
+  positionKind: 'blockNumber',
+});
+
+const usdc = new Asset({
+  symbol: 'USDC',
+  name: 'USD Coin',
+  chainSlug: 'ethereum',
+  decimals: 6,
+  identifier: {
+    type: 'contractAddress',
+    value: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  },
+});
