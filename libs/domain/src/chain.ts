@@ -1,3 +1,5 @@
+import { requireNonEmptyString } from './validation';
+
 export type ChainFamily = 'evm';
 export type PositionKind = 'blockNumber';
 
@@ -15,13 +17,8 @@ export class Chain {
   readonly positionKind: PositionKind;
 
   constructor(props: ChainProps) {
-    if (props.slug.trim().length === 0) {
-      throw new Error('Chain slug is required');
-    }
-
-    if (props.name.trim().length === 0) {
-      throw new Error('Chain name is required');
-    }
+    requireNonEmptyString(props.slug, 'Chain slug is required');
+    requireNonEmptyString(props.name, 'Chain name is required');
 
     this.slug = props.slug;
     this.name = props.name;

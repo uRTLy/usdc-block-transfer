@@ -1,3 +1,9 @@
+import {
+  requireIntegerString,
+  requireNonEmptyString,
+  requireNonNegativeInteger,
+} from './validation';
+
 export interface TransferProps {
   chainSlug: string;
   assetSymbol: string;
@@ -22,32 +28,30 @@ export class Transfer {
   readonly amountRaw: string;
 
   constructor(props: TransferProps) {
-    requireNonEmpty(props.chainSlug, 'Transfer chain slug is required');
-    requireNonEmpty(props.assetSymbol, 'Transfer asset symbol is required');
-    requireNonEmpty(props.position, 'Transfer position is required');
-    requireNonEmpty(
+    requireNonEmptyString(props.chainSlug, 'Transfer chain slug is required');
+    requireNonEmptyString(
+      props.assetSymbol,
+      'Transfer asset symbol is required',
+    );
+    requireNonEmptyString(props.position, 'Transfer position is required');
+    requireNonEmptyString(
       props.transactionHash,
       'Transfer transaction hash is required',
     );
-    requireNonEmpty(props.from, 'Transfer sender is required');
-    requireNonEmpty(props.to, 'Transfer recipient is required');
-
-    if (
-      !Number.isInteger(props.transactionIndex) ||
-      props.transactionIndex < 0
-    ) {
-      throw new Error(
-        'Transfer transaction index must be a non-negative integer',
-      );
-    }
-
-    if (!Number.isInteger(props.logIndex) || props.logIndex < 0) {
-      throw new Error('Transfer log index must be a non-negative integer');
-    }
-
-    if (!/^\d+$/.test(props.amountRaw)) {
-      throw new Error('Transfer raw amount must be an integer string');
-    }
+    requireNonEmptyString(props.from, 'Transfer sender is required');
+    requireNonEmptyString(props.to, 'Transfer recipient is required');
+    requireNonNegativeInteger(
+      props.transactionIndex,
+      'Transfer transaction index must be a non-negative integer',
+    );
+    requireNonNegativeInteger(
+      props.logIndex,
+      'Transfer log index must be a non-negative integer',
+    );
+    requireIntegerString(
+      props.amountRaw,
+      'Transfer raw amount must be an integer string',
+    );
 
     this.chainSlug = props.chainSlug;
     this.assetSymbol = props.assetSymbol;
@@ -70,11 +74,5 @@ export class Transfer {
     }
 
     return left.logIndex - right.logIndex;
-  }
-}
-
-function requireNonEmpty(value: string, message: string): void {
-  if (value.trim().length === 0) {
-    throw new Error(message);
   }
 }
